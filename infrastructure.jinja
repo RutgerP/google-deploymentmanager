@@ -1,0 +1,94 @@
+{% set INSTANCE_TEMPLATE = env['name'] + '-instance-template' %}
+{% set INSTANCE_GROUPMANAGER = env['name'] + '-instance-groupmanager' %}
+{% set FORWARDING_RULE = env['name'] + '-forwarding' %}
+{% set AUTOSCALER = env['name'] + '-autoscaler' %}
+{% set TARGET_POOL = env['name'] + '-target-pool' %}
+{% set HEALTH_CHECK = env['name'] + '-health-check' %}
+{% set BUCKET = env['name'] + '-rutger-bucket' %}
+{% set FRONTEND = env["name"] + '-firewall' %}
+
+resources:
+- name: {{ INSTANCE_TEMPLATE }}
+  type: compute.v1.instanceTemplate
+  properties:
+    properties:
+      machineType: {{ properties['machineType'] }}
+      disks:
+      - deviceName: boot
+        boot: true
+        type: PERSISTENT
+        autoDelete: true
+        mode: READ_WRITE
+        initializeParams:
+          sourceImage: {{ properties['image'] }}
+      networkInterfaces:
+      - network: global/networks/default
+      serviceAccounts:
+      - email: {{ properties['email'] }}
+        scopes:
+        - "https://www.googleapis.com/auth/cloud-platform"
+        
+      tags:
+        items:
+        - http-server
+
+- name: {{ INSTANCE_GROUPMANAGER }}
+  type: compute.v1.instanceGroupManager
+  properties:
+    zone: {{ properties['zone'] }}
+    targetSize: 1
+    targetPools:
+      - $(ref.{{ TARGET_POOL }}.selfLink)
+    baseInstanceName: groupmanager-instance
+    instanceTemplate: $(ref.{{ INSTANCE_TEMPLATE }}.selfLink)
+
+- name: {{ AUTOSCALER }}
+  type: compute.v1.autoscaler
+  properties:
+    zone: {{ properties['zone'] }}
+    target: $(ref.{{ INSTANCE_GROUPMANAGER }}.selfLink)
+    autoscalingPolicy:
+      maxNumReplicas: {{ properties['maxNumReplicas'] }}
+      minNumReplicas: {{ properties['minNumReplicas'] }}
+      cpuUsageUtilization:
+        utilizationTarget: .8
+
+- name: {{ HEALTH_CHECK }}
+  type: compute.v1.httpHealthCheck
+  properties:
+    port: 80
+    requestPath: /
+    timeoutSec: 3
+    description: Web server health check
+    checkIntervalSec: 3
+    unhealthyThreshold: 5
+    healthyThreshold: 2
+
+- name: {{ TARGET_POOL }}
+  type: compute.v1.targetPool
+  properties:
+    region: {{ properties['region'] }}
+    healthChecks:
+      - $(ref.{{ HEALTH_CHECK }}.selfLink)
+
+- name: {{ FORWARDING_RULE }}
+  type: compute.v1.forwardingRule
+  properties:
+    region: {{ properties['region'] }}
+    portRange: 80
+    target: $(ref.{{ TARGET_POOL }}.selfLink)
+
+- name: {{ BUCKET }}
+  type: storage.v1.bucket
+  properties:
+    name: rutger-{{ BUCKET }}
+
+- name: {{ FRONTEND }}
+  type: compute.v1.firewall
+  properties:
+    network: /global/networks/default
+    sourceRanges: [ "0.0.0.0/0" ]
+    targetTags: ["http-server"]
+    allowed:
+    - IPProtocol: tcp
+      ports: [ "80" ]

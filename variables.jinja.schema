@@ -1,0 +1,32 @@
+required:
+- zone
+- image
+- machineType
+- maxNumReplicas
+- minNumReplicas
+- region
+- email
+
+properties:
+  zone:
+    type: string
+    description: Zone to run the instances in.
+  image:
+    type: string
+    description: Image to run on the VMs.
+  machineType:
+    type: string
+    descripton: Type of GCE instance to use.
+  maxNumReplicas:
+    type: integer
+    description: Maximum replicas in the instance-group
+  minNumReplicas:
+    type: integer
+    description: Minimum replicas in the instance-group
+  region:
+    type: string
+    description: Give your region
+  email:
+    type: string
+    description: Service account email 
+ 

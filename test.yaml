@@ -1,0 +1,14 @@
+imports:
+- path: infrastructure.jinja
+
+resources:
+  - name: test
+    type: infrastructure.jinja
+    properties:
+      zone: europe-west1-b
+      image: https://www.googleapis.com/compute/v1/projects/certain-nexus-865/global/images/packer-image-stage-16
+      machineType: g1-small
+      maxNumReplicas: 4
+      minNumReplicas: 3
+      region: europe-west1
+      email: "stage-833@certain-nexus-865.iam.gserviceaccount.com"
