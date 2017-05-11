@@ -4,7 +4,7 @@
 {% set AUTOSCALER = env['name'] + '-autoscaler' %}
 {% set TARGET_POOL = env['name'] + '-target-pool' %}
 {% set HEALTH_CHECK = env['name'] + '-health-check' %}
-{% set BUCKET = env['name'] + '-rutger-bucket' %}
+{% set BUCKET = env['name'] + '-uniquename-bucket' %}
 {% set FRONTEND = env["name"] + '-firewall' %}
 
 resources:
@@ -81,7 +81,7 @@ resources:
 - name: {{ BUCKET }}
   type: storage.v1.bucket
   properties:
-    name: rutger-{{ BUCKET }}
+    name: uniquename-{{ BUCKET }}
 
 - name: {{ FRONTEND }}
   type: compute.v1.firewall
