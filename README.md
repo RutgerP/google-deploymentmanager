@@ -1,4 +1,4 @@
-# google-deploymentmanager
+# Google-deploymentmanager
 
 # How to use
 ```
